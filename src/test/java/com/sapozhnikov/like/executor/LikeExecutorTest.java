@@ -1,4 +1,4 @@
-package com.sapozhnikov.executor;
+package com.sapozhnikov.like.executor;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -21,7 +21,7 @@ public class LikeExecutorTest {
     @Test
     public void testAddAndRunTask() throws InterruptedException {
         AtomicBoolean atomicBoolean = new AtomicBoolean(false);
-        LocalDateTime timeRunTask = LocalDateTime.now().plusNanos(100);
+        LocalDateTime timeRunTask = LocalDateTime.now().plusNanos(100000000);
 
         likeExecutor.addTask(timeRunTask, () -> {
                     atomicBoolean.set(true);
@@ -31,7 +31,7 @@ public class LikeExecutorTest {
                 }
         );
 
-        TimeUnit.MILLISECONDS.sleep(100);
+        TimeUnit.MILLISECONDS.sleep(200);
         assertTrue(atomicBoolean.get());
     }
 
@@ -39,8 +39,8 @@ public class LikeExecutorTest {
     public void testAddAndRunTwoTask() throws InterruptedException {
         AtomicBoolean firstTaskTester = new AtomicBoolean(false);
         AtomicBoolean secondTaskTester = new AtomicBoolean(false);
-        LocalDateTime timeRunFirstTask = LocalDateTime.now().plusNanos(100);
-        LocalDateTime timeRunSecondTask = LocalDateTime.now().plusNanos(200);
+        LocalDateTime timeRunFirstTask = LocalDateTime.now().plusNanos(100000000);
+        LocalDateTime timeRunSecondTask = LocalDateTime.now().plusNanos(200000000);
 
         likeExecutor.addTask(timeRunFirstTask, () -> {
                     firstTaskTester.set(true);
@@ -59,7 +59,7 @@ public class LikeExecutorTest {
                 }
         );
 
-        TimeUnit.MILLISECONDS.sleep(100);
+        TimeUnit.MILLISECONDS.sleep(300);
         assertTrue(firstTaskTester.get());
         assertTrue(secondTaskTester.get());
     }
@@ -68,8 +68,8 @@ public class LikeExecutorTest {
     public void testAddTwoTaskInvertOrderAndRunCorrectOrder() throws InterruptedException {
         AtomicBoolean firstTaskTester = new AtomicBoolean(false);
         AtomicBoolean secondTaskTester = new AtomicBoolean(false);
-        LocalDateTime timeRunFirstTask = LocalDateTime.now().plusNanos(100);
-        LocalDateTime timeRunSecondTask = LocalDateTime.now().plusNanos(200);
+        LocalDateTime timeRunFirstTask = LocalDateTime.now().plusNanos(100000000);
+        LocalDateTime timeRunSecondTask = LocalDateTime.now().plusNanos(200000000);
 
         likeExecutor.addTask(timeRunSecondTask, () -> {
                     if (firstTaskTester.get()) {
@@ -88,7 +88,7 @@ public class LikeExecutorTest {
                 }
         );
 
-        TimeUnit.MILLISECONDS.sleep(100);
+        TimeUnit.MILLISECONDS.sleep(300);
         assertTrue(firstTaskTester.get());
         assertTrue(secondTaskTester.get());
     }
@@ -97,7 +97,7 @@ public class LikeExecutorTest {
     public void testAddAndRunTwoTaskWithEqualsTimeRun() throws InterruptedException {
         AtomicBoolean firstTaskTester = new AtomicBoolean(false);
         AtomicBoolean secondTaskTester = new AtomicBoolean(false);
-        LocalDateTime timeRunBothTask = LocalDateTime.now().plusNanos(100);
+        LocalDateTime timeRunBothTask = LocalDateTime.now().plusNanos(100000000);
 
         likeExecutor.addTask(timeRunBothTask, () -> {
                     firstTaskTester.set(true);
@@ -116,7 +116,7 @@ public class LikeExecutorTest {
                 }
         );
 
-        TimeUnit.MILLISECONDS.sleep(100);
+        TimeUnit.MILLISECONDS.sleep(300);
         assertTrue(firstTaskTester.get());
         assertTrue(secondTaskTester.get());
     }
@@ -125,8 +125,8 @@ public class LikeExecutorTest {
     public void testAddAndRunTwoTaskWithAddTaskFromDifferentThreads() throws InterruptedException {
         AtomicBoolean firstTaskTester = new AtomicBoolean(false);
         AtomicBoolean secondTaskTester = new AtomicBoolean(false);
-        LocalDateTime timeRunFirstTask = LocalDateTime.now().plusNanos(100);
-        LocalDateTime timeRunSecondTask = LocalDateTime.now().plusNanos(200);
+        LocalDateTime timeRunFirstTask = LocalDateTime.now().plusNanos(100000000);
+        LocalDateTime timeRunSecondTask = LocalDateTime.now().plusNanos(200000000);
 
         Thread threadForAddFirstTask = new Thread(() ->
                 likeExecutor.addTask(timeRunFirstTask, () -> {
@@ -146,10 +146,10 @@ public class LikeExecutorTest {
                             return message;
                         }
                 ));
-        threadForAddFirstTask.start();
         threadForAddSecondTask.start();
+        threadForAddFirstTask.start();
 
-        TimeUnit.MILLISECONDS.sleep(100);
+        TimeUnit.MILLISECONDS.sleep(300);
         assertTrue(firstTaskTester.get());
         assertTrue(secondTaskTester.get());
     }
