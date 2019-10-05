@@ -9,8 +9,11 @@ import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.LockSupport;
+import java.util.logging.Logger;
 
 public class LikeExecutor {
+
+    private final Logger log = Logger.getLogger(LikeExecutor.class.getName());
 
     private final Thread taskExecutor;
     private final Thread taskQueueToPullMover;
@@ -35,7 +38,7 @@ public class LikeExecutor {
             throw new IllegalArgumentException("task outdated!");
         }
         TaskTimer taskTimer = new TaskTimer(timeRunTask, task);
-        System.out.println(String.format("taskTimer=%s add to taskTimerQueue", taskTimer));
+        log.info(String.format("taskTimer=%s add to taskTimerQueue", taskTimer));
         taskTimerQueue.add(taskTimer);
         LockSupport.unpark(taskQueueToPullMover);
     }
@@ -43,7 +46,7 @@ public class LikeExecutor {
     private void moveTaskFromQueueToPull() {
         while (true) {
             if (taskTimerQueue.isEmpty()) {
-                System.out.println("taskTimerQueue! taskTimerQueue notify");
+                log.info("taskTimerQueue! taskTimerQueue notify");
                 LockSupport.park(taskQueueToPullMover);
                 continue;
             }
@@ -63,8 +66,8 @@ public class LikeExecutor {
             taskQueue.add(task);
             taskPull.put(timeRunTask, taskQueue);
         }
-        System.out.println(String.format("callable with date=%s put in taskPull!", timeRunTask));
-        LockSupport.unpark(taskExecutor);
+        log.info(String.format("callable with date=%s put in taskPull!", timeRunTask));
+        taskExecutor.interrupt();
     }
 
     private void getAndRunTask() {
@@ -74,7 +77,7 @@ public class LikeExecutor {
                 try {
                     dataTimeNextTask = taskPull.firstKey();
                 } catch (NoSuchElementException e1) {
-                    System.out.println("taskPoolIsEmpty! taskExecutor notify");
+                    log.info("taskPoolIsEmpty! taskExecutor notify");
                     LockSupport.park(taskExecutor);
                     continue;
                 }
@@ -83,19 +86,18 @@ public class LikeExecutor {
                         .getValue()
                         .forEach(callable -> runTask(dataTimeNextTask, callable));
             } catch (InterruptedException e) {
-                System.out.println("LikeExecutor is dead(((");
-                throw new RuntimeException(e);
+                log.info("taskExecutor wake up");
             }
         }
     }
 
     private void runTask(LocalDateTime dataTimeNextTask, Callable callable) {
         try {
-            System.out.println(String.format("callable with date=%s start work!", dataTimeNextTask));
+            log.info(String.format("callable with date=%s start work!", dataTimeNextTask));
             Object call = callable.call();
-            System.out.println(String.format("callable with date=%s complete! Return=%s", dataTimeNextTask, call));
+            log.info(String.format("callable with date=%s complete! Return=%s", dataTimeNextTask, call));
         } catch (Exception e) {
-            System.out.println(String.format("callable with date=%s throw exception!", dataTimeNextTask));
+            log.info(String.format("callable with date=%s throw exception!", dataTimeNextTask));
             e.printStackTrace();
         }
     }
